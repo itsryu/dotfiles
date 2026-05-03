@@ -1,3 +1,7 @@
-vim.g.mapleader = " " local map = vim.keymap.set
+vim.g.mapleader = " "
+local map = vim.keymap.set
 
-map("n","e",":NvimTreeToggle") map("n","w",":w") map("n","q",":q")
+map("n", "e", ":NvimTreeToggle<CR>")
+map("n", "w", ":w<CR>")
+map("n", "q", ":q<CR>")
+

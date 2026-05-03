@@ -1,1 +1,21 @@
-require("lualine").setup() require("nvim-tree").setup()
+return {
+  {
+    "folke/tokyonight.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.cmd("colorscheme tokyonight")
+    end,
+  },
+  {
+    "nvim-lualine/lualine.nvim",
+    event = "VeryLazy",
+    opts = {},
+  },
+  {
+    "nvim-tree/nvim-tree.lua",
+    cmd = "NvimTreeToggle",
+    opts = {},
+  }
+}
+

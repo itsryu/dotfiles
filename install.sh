@@ -1,26 +1,72 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-set -e
+set -euo pipefail
+IFS=$'\n\t'
 
-echo "[*] atualizando sistema..." 
-pkg update -y && pkg upgrade -y
+# ==============================================================================
+# Configuração
+# ==============================================================================
+if [[ -t 1 ]] && [[ "${TERM:-}" != "dumb" ]]; then
+  readonly C_RESET='\033[0m'
+  readonly C_INFO='\033[38;5;39m'    # azul
+  readonly C_SUCCESS='\033[38;5;40m' # verde
+  readonly C_WARN='\033[38;5;214m'   # laranja
+  readonly C_ERROR='\033[38;5;196m'  # vermelho
+else
+  readonly C_RESET=''
+  readonly C_INFO=''
+  readonly C_SUCCESS=''
+  readonly C_WARN=''
+  readonly C_ERROR=''
+fi
 
-echo "[*] instalando pacotes base..."
-pkg install -y 
-git zsh neovim tmux curl wget unzip zip 
-clang cmake ninja lldb 
-ripgrep fd fzf bat eza 
-nodejs python
+log_event() {
+  local level="$1"
+  local message="$2"
+  local timestamp
+  
+  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  local color="$C_RESET"
+  local fd=1 
 
-echo "[*] instalando oh-my-zsh..." [ -d "$HOME/.oh-my-zsh" ] || 
-git clone https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
+  case "$level" in
+    INFO)    color="$C_INFO" ;;
+    SUCCESS) color="$C_SUCCESS" ;;
+    WARN)    color="$C_WARN" ; fd=2 ;;
+    ERROR)   color="$C_ERROR"; fd=2 ;;
+  esac
 
-echo "[*] instalando powerlevel10k..." [ -d "$HOME/powerlevel10k" ] || 
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+  printf "${color}[%s] [%-7s] %s${C_RESET}\n" "$timestamp" "$level" "$message" >&"$fd"
+}
 
-echo "[*] aplicando configs..."
-cp -r .zshrc ~/ cp -r .p10k.zsh ~/ cp -r .config ~/ cp -r .termux ~/
-echo "[*] ativando zsh..." 
-mkdir -p ~/.termux echo "zsh" > ~/.termux/shell termux-reload-settings
+trap 'log_event "ERROR" "Interrupção algorítmica detectada. Falha fatal na linha $LINENO."' ERR
 
-echo "[✓] concluído. reinicie o Termux e rode: p10k configure"
+# ==============================================================================
+# Execução
+# ==============================================================================
+log_event "INFO" "Inicializando provisionamento do ambiente Termux..."
+
+log_event "INFO" "Sincronizando a árvore de pacotes locais..."
+pkg update -y && pkg upgrade -y > /dev/null
+
+log_event "INFO" "Compilando dependências sistêmicas e utilitários de engenharia..."
+pkg install -y git zsh neovim tmux curl wget unzip zip clang cmake ninja lldb ripgrep fd fzf bat eza nodejs python > /dev/null
+
+log_event "INFO" "Processando requisições assíncronas de repositórios (Zsh & P10k)..."
+[ ! -d "$HOME/.oh-my-zsh" ] && git clone --quiet --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh" &
+[ ! -d "$HOME/powerlevel10k" ] && git clone --quiet --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/powerlevel10k" &
+
+wait
+
+log_event "INFO" "Alocando arquivos de configuração e reestruturando dotfiles..."
+cp -r .zshrc "$HOME/"
+cp -r .p10k.zsh "$HOME/"
+cp -r .config "$HOME/"
+cp -r .termux "$HOME/"
+
+mkdir -p "$HOME/.termux"
+echo "zsh" > "$HOME/.termux/shell"
+termux-reload-settings > /dev/null 2>&1 || true
+
+log_event "SUCCESS" "O provisionamento estrito foi concluído. Reinicie o cliente para alocação do interpretador."
+
