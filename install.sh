@@ -1,32 +1,26 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# update base
+set -e
+
+echo "[*] atualizando sistema..." 
 pkg update -y && pkg upgrade -y
 
-# core packages
-pkg install -y git zsh neovim tmux curl wget unzip zip \
-               clang cmake ninja lldb \
-               ripgrep fd fzf bat eza \
-               nodejs python
+echo "[*] instalando pacotes base..."
+pkg install -y 
+git zsh neovim tmux curl wget unzip zip 
+clang cmake ninja lldb 
+ripgrep fd fzf bat eza 
+nodejs python
 
-# install oh-my-zsh
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-  git clone https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
-fi
+echo "[*] instalando oh-my-zsh..." [ -d "$HOME/.oh-my-zsh" ] || 
+git clone https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
 
-# install powerlevel10k
-if [ ! -d "$HOME/powerlevel10k" ]; then
-  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-fi
+echo "[*] instalando powerlevel10k..." [ -d "$HOME/powerlevel10k" ] || 
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 
-# apply configs
-cp -r .zshrc ~/
-cp -r .config ~/
-cp -r .termux ~/
+echo "[*] aplicando configs..."
+cp -r .zshrc ~/ cp -r .p10k.zsh ~/ cp -r .config ~/ cp -r .termux ~/
+echo "[*] ativando zsh..." 
+mkdir -p ~/.termux echo "zsh" > ~/.termux/shell termux-reload-settings
 
-# set shell
-mkdir -p ~/.termux
-echo "zsh" > ~/.termux/shell
-termux-reload-settings
-
-echo "Setup concluído. Reinicie o Termux."
+echo "[✓] concluído. reinicie o Termux e rode: p10k configure"
