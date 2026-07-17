@@ -50,7 +50,7 @@ log_event "INFO" "Sincronizando a árvore de pacotes locais..."
 pkg update -y && pkg upgrade -y > /dev/null
 
 log_event "INFO" "Compilando dependências sistêmicas e utilitários de engenharia..."
-pkg install -y git zsh neovim tmux curl wget unzip zip clang cmake ninja lldb ripgrep fd fzf bat eza nodejs python > /dev/null
+pkg install -y git zsh neovim tmux curl wget unzip zip clang cmake ninja lldb ripgrep fd fzf bat eza nodejs python which > /dev/null
 
 log_event "INFO" "Processando requisições assíncronas de repositórios (Zsh & P10k)..."
 [ ! -d "$HOME/.oh-my-zsh" ] && git clone --quiet --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh" &
@@ -58,11 +58,21 @@ log_event "INFO" "Processando requisições assíncronas de repositórios (Zsh &
 
 wait
 
+log_event "INFO" "Instalando Nerd Font..."
+
+mkdir -p "$HOME/.termux"
+
+if [ ! -f "$HOME/.termux/font.ttf" ]; then
+  curl -fsSL \
+    "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf" \
+    -o "$HOME/.termux/font.ttf"
+fi
+
 log_event "INFO" "Alocando arquivos de configuração e reestruturando dotfiles..."
 cp -r .zshrc "$HOME/"
 cp -r .p10k.zsh "$HOME/"
 cp -r .config "$HOME/"
-cp -r .termux "$HOME/"
+cp -rn .termux/* "$HOME/.termux/"
 
 mkdir -p "$HOME/.termux"
 echo "zsh" > "$HOME/.termux/shell"
